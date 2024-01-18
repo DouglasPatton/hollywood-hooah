@@ -1,0 +1,9 @@
+<h1>{{title}}</h1>
+<label>Query:</label>
+<input type="text" [(ngModel)]="query">
+<button (click)="submit()">Respond</button>
+
+<div>
+  <label>Response: </label>
+  <label>{{chat_response}}</label>
+</div>
