@@ -22,8 +22,13 @@ class TextEmbedder:
         self.embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
 
     @staticmethod
-    def add_title(text_result_dict):
-        return (
+    def add_title(doc):
+        title_parts = doc.metadata['source'].split(os.sep)
+        if title_parts[0]=='references': title_parts.pop(0)
+        if len(title_parts)>2:
+            sup_title = 
+        titled_content = (
+            
             f"Title: {text_result_dict['title']}:"
             f"\n\n\n{text_result_dict['cleaned']}"
         )
