@@ -2,7 +2,7 @@
 
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import StrOutputParser
-from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain_core.documents import Document
 from langchain_core.runnables import RunnablePassthrough
 from ragchat.configs import (DEBUG,

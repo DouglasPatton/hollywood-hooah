@@ -1,7 +1,7 @@
 # summarize documents to see how the html cleaning is doing
 from typing import List
 
-from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain_community.vectorstores import VectorStore
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
