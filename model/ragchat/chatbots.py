@@ -5,11 +5,11 @@ from langchain.schema import StrOutputParser
 from langchain_community.chat_models import ChatOpenAI
 from langchain_core.documents import Document
 from langchain_core.runnables import RunnablePassthrough
-from ragchat.configs import (DEBUG, MIN_CHARS_REF_TEXT,
-                             MIN_ENGL_SHARE_REF_TEXT, PARSER,
-                             QUESTIONS_VECTOR_STORE_SAVE_PATH, VECTOR_STORE_SAVE_PATH)
+from ragchat.configs import (DEBUG,
+# MIN_CHARS_REF_TEXT, KEYS, MIN_ENGL_SHARE_REF_TEXT, PARSER, 
+QUESTIONS_VECTOR_STORE_SAVE_PATH, VECTOR_STORE_SAVE_PATH)
 from ragchat.custom_retrievers import MetaRetriever, MultiRetrieverCombiner, StaticRetriever
-from ragchat.html_cleaner import HtmlCleaner
+# from ragchat.html_cleaner import HtmlCleaner
 from ragchat.text_embedder import TextEmbedder
 
 
@@ -120,20 +120,19 @@ class RagChatSyntheticQ:
 
         for i, d in enumerate(q_docs):
             q = d[0].page_content
-            pages = d[0].metadata["page_list"]
-            cleaner = HtmlCleaner(
-                parser=PARSER,
-                debug=DEBUG,
-                min_chars_ref_text=MIN_CHARS_REF_TEXT,
-                min_engl_share_ref_text=MIN_ENGL_SHARE_REF_TEXT,
-                max_pages=None,
-                page_list=pages,
-            )
-            clean_text_dict = cleaner.get_clean_text_dict()
-            for pg, text_result in clean_text_dict.items():
+            ds=DocStore(db_name=DB_NAME, collection_name=COLLECTION_NAME,)
+            docs = d[0].metadata["doc_list"] #multiple docs may have same question
+            for doc_dict in docs:
+                docs_with_text = ds.yield_from_db(
+                    query={k:doc_dict[k] for k in KEYS},
+                    chunk_size=None
+                )
+                assert len(docs_with_text)==0
+            
+                text_result = docs_with_text[0]
                 doc = Document(
                     page_content=TextEmbedder.add_title(text_result),
-                    metadata={"page": pg},
+                    metadata={k:v for k,v in text_result.items() if k!='cleaned'},
                 )
                 retriever = StaticRetriever(docs=[doc])
                 chain = (

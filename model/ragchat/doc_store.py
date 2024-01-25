@@ -1,10 +1,10 @@
 from pymongo import MongoClient
-from ragchat.configs import DEBUG
+from ragchat.configs import DEBUG, DB_NAME, COLLECTION_NAME, KEYS
 
 class DocStore:
     def __init__(self,ip='localhost',port=27017, 
-                 db_name='docs', collection_name='pdf',
-                 keys=['folder','file_name', 'page'],
+                 db_name=DB_NAME, collection_name=COLLECTION_NAME,
+                 keys=KEYS,
                  debug=DEBUG
                 ):
         self.ip=ip
@@ -25,8 +25,9 @@ class DocStore:
         
         
     def add_to_db(self,things):
+        if len(things)==0: return
         client = MongoClient(f'{self.ip}:{self.port}')
-        db=self.client[self.db_name]
+        db=client[self.db_name]
         coll=db[self.collection_name]
         not_new=[]
         new=[]
@@ -36,7 +37,10 @@ class DocStore:
                 not_new.append(thing)
             else:
                 new.append(thing)  
-        response=coll.insert_many(new)
+        if len(new)>0:
+            response=coll.insert_many(new)
+        else:
+            response=f'na b/c nothing new'
         if self.debug:
             self.insert_responses.append(response)
             self.not_new.append(not_new)
@@ -45,12 +49,16 @@ class DocStore:
 
     def yield_from_db(self, query={}, chunk_size=10):
         client = MongoClient(f'{self.ip}:{self.port}')
-        db=self.client[self.db_name]
+        db=client[self.db_name]
         coll=db[self.collection_name]
         n_docs = coll.count_documents(query)
-        n_chunks=-(-n_docs//chunk_size)
+        if chunk_size is None:
+            n_chunks=1
+            chunk_size=n_docs
+        else:
+            n_chunks=-(-n_docs//chunk_size)
         for i in range(n_chunks):
-            yield coll.find(query)[i*chunk_size:(i+1)*chunk_size]
+            yield [dict(q) for q in coll.find(query)[i*chunk_size:(i+1)*chunk_size]]
         client.close()
         return
 

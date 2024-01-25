@@ -1,27 +1,22 @@
-from ragchat.configs import (DEBUG, MAX_TOKENS_REF_TEXT, MIN_CHARS_REF_TEXT,
-                     MIN_ENGL_SHARE_REF_TEXT, PARSER, VECTOR_STORE_SAVE_PATH)
-from ragchat.html_cleaner import HtmlCleaner
+from ragchat.configs import (DB_NAME, COLLECTION_NAME,
+    DEBUG, MAX_TOKENS_REF_TEXT, MIN_TOKENS_REF_TEXT, 
+    VECTOR_STORE_SAVE_PATH)
+from ragchat.doc_store import DocStore
+
 from ragchat.text_embedder import TextEmbedder
 
 
 def create_embeddings():
-    cleaner = HtmlCleaner(
-        parser=PARSER,
-        debug=DEBUG,
-        min_chars_ref_text=MIN_CHARS_REF_TEXT,
-        min_engl_share_ref_text=MIN_ENGL_SHARE_REF_TEXT,
-        max_pages=None,
-    )
-    clean_text_dict = cleaner.get_clean_text_dict()
+    ds=DocStore(db_name=DB_NAME, collection_name=COLLECTION_NAME,)
     text_embedder = TextEmbedder(
         vector_store_save_path=VECTOR_STORE_SAVE_PATH,
         max_tokens_ref_text=MAX_TOKENS_REF_TEXT,
+        min_tokens_ref_text=MIN_TOKENS_REF_TEXT,
     )
-    text_embedder.embed_text_dict(clean_text_dict)
+    for doc_chunk in ds.yield_from_db(query={}, chunk_size=100):
+        text_embedder.embed_docs(doc_chunk)
 
-    print(
-        f"embeddings for {len(clean_text_dict)} docs saved to {text_embedder.vector_store_save_path}"
-    )
+    
 
 
 if __name__ == "__main__":
