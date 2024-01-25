@@ -64,6 +64,7 @@ kiwisolver==1.4.5
 langchain==0.1.0
 langchain-community==0.0.15
 langchain-core==0.1.15
+langchain-openai==0.0.3
 langsmith==0.0.83
 MarkupSafe==2.1.4
 marshmallow==3.20.2
