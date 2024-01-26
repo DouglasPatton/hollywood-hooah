@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 from ragchat.configs import DEBUG, DB_NAME, COLLECTION_NAME, KEYS
+from random import seed,shuffle
 
 class DocStore:
     def __init__(self,ip='localhost',port=27017, 
@@ -22,6 +23,21 @@ class DocStore:
     #     client = MongoClient(f'{self.ip}:{self.port}')
     #     db=self.client[self.db_name]
     #     coll=db[self.collection_name]
+    def get_client_collection(self):
+        client = MongoClient(f'{self.ip}:{self.port}')
+        db=client[self.db_name]
+        coll=db[self.collection_name]
+        return client, coll
+
+    def retrieve_random(self,n=10):
+        cli,coll = self.get_client_collection()
+        a=list(coll.find({},'_id'))
+        seed(n)
+        shuffle(a)
+        b=[a_['_id'] for a_ in a[:5]]
+        results=list(coll.find({"_id": {"$in": b}}))
+        cli.close()
+        return results
         
         
     def add_to_db(self,things):
@@ -47,7 +63,7 @@ class DocStore:
         client.close()
         return
 
-    def yield_from_db(self, query={}, chunk_size=10):
+    def yield_from_db(self, query={},projection={}, chunk_size=10):
         client = MongoClient(f'{self.ip}:{self.port}')
         db=client[self.db_name]
         coll=db[self.collection_name]
@@ -58,7 +74,7 @@ class DocStore:
         else:
             n_chunks=-(-n_docs//chunk_size)
         for i in range(n_chunks):
-            yield [dict(q) for q in coll.find(query)[i*chunk_size:(i+1)*chunk_size]]
+            yield [dict(q) for q in coll.find(query, projection)[i*chunk_size:(i+1)*chunk_size]]
         client.close()
         return
 

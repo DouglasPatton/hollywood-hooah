@@ -42,8 +42,9 @@ ENTITY_CLASSES = [
 
 TEST_QUERIES = [
     "What kinds of obligations does a production company have?",
-    "Have movies related to sexual identity been part of the project?",
+    "Have movies related to sexual identity of members of the armed forces been part of the project?",
     "What movies have used aircraft carriers?",
+    "What movies have used fighter jets?",
     "Tell me detailed information about how aircraft carriers have been used.",
     "What kinds of military equipment appear in movies in the project?",
     

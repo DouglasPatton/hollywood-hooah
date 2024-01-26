@@ -1,5 +1,5 @@
 # summarize documents to see how the html cleaning is doing
-
+from joblib import hash as jhash
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import StrOutputParser
 from langchain_openai import ChatOpenAI
@@ -7,10 +7,11 @@ from langchain_core.documents import Document
 from langchain_core.runnables import RunnablePassthrough
 from ragchat.configs import (DEBUG,
 # MIN_CHARS_REF_TEXT, KEYS, MIN_ENGL_SHARE_REF_TEXT, PARSER, 
-QUESTIONS_VECTOR_STORE_SAVE_PATH, VECTOR_STORE_SAVE_PATH)
+QUESTIONS_VECTOR_STORE_SAVE_PATH, VECTOR_STORE_SAVE_PATH, DB_NAME, COLLECTION_NAME)
 from ragchat.custom_retrievers import MetaRetriever, MultiRetrieverCombiner, StaticRetriever
 # from ragchat.html_cleaner import HtmlCleaner
 from ragchat.text_embedder import TextEmbedder
+from ragchat.doc_store import DocStore
 
 
 class RagChatbot:
@@ -22,13 +23,16 @@ class RagChatbot:
         ).get_vector_store()
         self.llm = ChatOpenAI(model="gpt-3.5-turbo-1106", temperature=0)
 
-    def get_pages(
-        self,
-    ):
-        pages = []
+    def get_sources(self,):
+        sources = []
+        source_hashes = []
         for meta in self.retriever.metadata:
-            pages.append(meta["page"])
-        return list(dict.fromkeys(pages))
+            hsh=jhash(meta)
+            if hsh in source_hashes:
+                continue
+            sources.append(meta)
+            source_hashes.append(hsh)
+        return sources
 
     def run_rag_chat(self, user_query):
         retriever = MetaRetriever(vector_store=self.vector_store, metadata=[])
@@ -64,13 +68,16 @@ class RagChatSyntheticQ:
         self.llm = ChatOpenAI(model="gpt-3.5-turbo-1106", temperature=0)
         self.metadata = []
 
-    def get_pages(
-        self,
-    ):
-        pages = []
+    def get_sources(self,):
+        sources = []
+        source_hashes = []
         for meta in self.metadata:
-            pages.append(meta["pg"])
-        return list(dict.fromkeys(pages))
+            hsh=jhash(meta)
+            if hsh in source_hashes:
+                continue
+            sources.append(meta)
+            source_hashes.append(hsh)
+        return sources
 
     def run_rag_chat(self, query):
         def is_answer_good(ans):
@@ -179,13 +186,16 @@ class RagChatbotMultiQA:
         self.llm = ChatOpenAI(model="gpt-3.5-turbo-1106", temperature=0)
         self.metadata = []
 
-    def get_pages(
-        self,
-    ):
-        pages = []
+    def get_sources(self,):
+        sources = []
+        source_hashes = []
         for meta in self.metadata:
-            pages.append(meta["doc"].metadata["page"])
-        return list(dict.fromkeys(pages))
+            hsh=jhash(meta)
+            if hsh in source_hashes:
+                continue
+            sources.append(meta)
+            source_hashes.append(hsh)
+        return sources
 
     def run_rag_chat(self, query):
         def is_answer_good(ans):
@@ -286,13 +296,16 @@ class RagChatbotMultiRetrieverCombiner:
         self.max_tokens_context = max_tokens_context
         self.max_docs = max_docs
 
-    def get_pages(
-        self,
-    ):
-        pages = []
+    def get_sources(self,):
+        sources = []
+        source_hashes = []
         for meta in self.retriever.metadata:
-            pages.append(meta["page"])
-        return list(dict.fromkeys(pages))
+            hsh=jhash(meta)
+            if hsh in source_hashes:
+                continue
+            sources.append(meta)
+            source_hashes.append(hsh)
+        return sources
 
     def run_rag_chat(self, user_query):
         # retriever = self.vector_store.as_retriever(search_kwargs={"include_metadata": True, 'k':10})

@@ -8,7 +8,7 @@ def test_embeddings():
         max_tokens_ref_text=MAX_TOKENS_REF_TEXT,
     )
     vs = text_embedder.get_vector_store()
-    test_text = "security incident for AutoCad Desktop Software"
+    test_text = "What kinds of obligations does a production company have?"
     print(vs.similarity_search_with_score(test_text))
 
 

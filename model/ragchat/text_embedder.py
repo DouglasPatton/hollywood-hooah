@@ -2,7 +2,7 @@ import os
 # summarize documents to see how the html cleaning is doing
 from time import sleep
 from ragchat.configs import MIN_TOKENS_REF_TEXT,MAX_TOKENS_REF_TEXT,VECTOR_STORE_SAVE_PATH
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain.schema import Document
 from langchain.text_splitter import (RecursiveCharacterTextSplitter)
 from langchain_openai import ChatOpenAI
