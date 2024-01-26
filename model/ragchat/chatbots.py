@@ -5,7 +5,7 @@ from langchain.schema import StrOutputParser
 from langchain_openai import ChatOpenAI
 from langchain_core.documents import Document
 from langchain_core.runnables import RunnablePassthrough
-from ragchat.configs import (DEBUG,
+from ragchat.configs import (DEBUG, KEYS
 # MIN_CHARS_REF_TEXT, KEYS, MIN_ENGL_SHARE_REF_TEXT, PARSER, 
 QUESTIONS_VECTOR_STORE_SAVE_PATH, VECTOR_STORE_SAVE_PATH, DB_NAME, COLLECTION_NAME)
 from ragchat.custom_retrievers import MetaRetriever, MultiRetrieverCombiner, StaticRetriever
@@ -72,10 +72,11 @@ class RagChatSyntheticQ:
         sources = []
         source_hashes = []
         for meta in self.metadata:
-            hsh=jhash(meta)
+            doc_meta=meta['doc_metadata']
+            hsh=jhash(doc_meta)
             if hsh in source_hashes:
                 continue
-            sources.append(meta)
+            sources.append(doc_meta)
             source_hashes.append(hsh)
         return sources
 
@@ -152,7 +153,7 @@ class RagChatSyntheticQ:
                 if is_answer_good(ans):
                     self.metadata.append(
                         {
-                            "pg": pg,
+                            "doc_metadata": doc.metadata,
                             "question": q,
                             "answer": ans,
                             "similarity_score": d[1],
