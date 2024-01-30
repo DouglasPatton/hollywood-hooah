@@ -13,7 +13,10 @@ Q_DB_NAME = 'synthetic-questions'
 Q_COLLECTION_NAME = 'questions'
 Q_KEYS = ['folder','file_name', 'page_number', 'question_number']
 TOKENS_PER_SYNTH_QUESTION = 200
-
+# answer_store
+A_DB_NAME = 'answers-to-synthetic-questions'
+A_COLLECTION_NAME = 'answers'
+A_KEYS = ['folder','file_name', 'page_number', 'question', 'template']
 # text_embedder
 MAX_TOKENS_REF_TEXT = 4000
 MIN_TOKENS_REF_TEXT = 20

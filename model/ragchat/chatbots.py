@@ -5,9 +5,10 @@ from langchain.schema import StrOutputParser
 from langchain_openai import ChatOpenAI
 from langchain_core.documents import Document
 from langchain_core.runnables import RunnablePassthrough
-from ragchat.configs import (DEBUG, KEYS
+from ragchat.configs import (DEBUG, KEYS,
 # MIN_CHARS_REF_TEXT, KEYS, MIN_ENGL_SHARE_REF_TEXT, PARSER, 
-QUESTIONS_VECTOR_STORE_SAVE_PATH, VECTOR_STORE_SAVE_PATH, DB_NAME, COLLECTION_NAME)
+QUESTIONS_VECTOR_STORE_SAVE_PATH, VECTOR_STORE_SAVE_PATH, DB_NAME, COLLECTION_NAME,
+A_DB_NAME, A_COLLECTION_NAME, A_KEYS)
 from ragchat.custom_retrievers import MetaRetriever, MultiRetrieverCombiner, StaticRetriever
 # from ragchat.html_cleaner import HtmlCleaner
 from ragchat.text_embedder import TextEmbedder
@@ -71,8 +72,7 @@ class RagChatSyntheticQ:
     def get_sources(self,):
         sources = []
         source_hashes = []
-        for meta in self.metadata:
-            doc_meta=meta['doc_metadata']
+        for doc_meta in self.metadata:
             hsh=jhash(doc_meta)
             if hsh in source_hashes:
                 continue
@@ -104,7 +104,7 @@ class RagChatSyntheticQ:
             answers_doc = Document(page_content="\n\n".join(q_a_pairs))
             retriever = StaticRetriever(docs=[answers_doc])
             template = (
-                "Answer the question using only the best information from the following suggested question, answer pairs:\n"
+                "Provide a detailed answer to the question using only the best information from the following suggested question, answer pairs:\n"
                 "{context}\n\nQuestion: {question}"
             )
 
@@ -128,37 +128,64 @@ class RagChatSyntheticQ:
 
         for i, d in enumerate(q_docs):
             q = d[0].page_content
-            ds=DocStore(db_name=DB_NAME, collection_name=COLLECTION_NAME,)
+            doc_ds=DocStore(db_name=DB_NAME, collection_name=COLLECTION_NAME,)
+            ans_ds=DocStore(db_name=A_DB_NAME, collection_name=A_COLLECTION_NAME,)
             docs = d[0].metadata["doc_list"] #multiple docs may have same question
             for doc_dict in docs:
-                docs_with_text = ds.yield_from_db(
+                docs_with_text = list(doc_ds.yield_from_db(
                     query={k:doc_dict[k] for k in KEYS},
                     chunk_size=None
-                )
-                assert len(docs_with_text)==0
+                ))[0]
+                assert len(docs_with_text)==1 # b/c doc_store returns a list
             
                 text_result = docs_with_text[0]
-                doc = Document(
-                    page_content=TextEmbedder.add_title(text_result),
-                    metadata={k:v for k,v in text_result.items() if k!='cleaned'},
-                )
-                retriever = StaticRetriever(docs=[doc])
-                chain = (
-                    {"context": retriever, "question": RunnablePassthrough()}
-                    | prompt
-                    | self.llm
-                    | StrOutputParser()
-                )
-                ans = chain.invoke(query)
-                if is_answer_good(ans):
+                doc_metadata = {k:v for k,v in text_result.items() if k!='cleaned'}
+
+                #retrieve any existing answers
+                ans_ds_result=list(ans_ds.yield_from_db(
+                    query={**{k:doc_dict[k] for k in KEYS},
+                           'template':template,
+                           'question':q},
+                    chunk_size=None
+                ))[0]
+                
+                if len(ans_ds_result)>0:
+                    assert len(ans_ds_result)==1
+                    ans=ans_ds_result[0]['answer']
+                else:    
+                    doc = Document(
+                        page_content=TextEmbedder.add_title(text_result),
+                        metadata=doc_metadata,
+                    )
+                    retriever = StaticRetriever(docs=[doc])
+                    chain = (
+                        {"context": retriever, "question": RunnablePassthrough()}
+                        | prompt
+                        | self.llm
+                        | StrOutputParser()
+                    )
+                    
+                    ans = chain.invoke(q)
+                is_good=is_answer_good(ans)
+                if is_good:
                     self.metadata.append(
                         {
-                            "doc_metadata": doc.metadata,
+                            **doc_metadata,
                             "question": q,
                             "answer": ans,
+                            "template": template,
                             "similarity_score": d[1],
                         }
                     )
+                if len(ans_ds_result)==0: #save the answer
+                    ans_ds.add_to_db(
+                        [{
+                            **doc_metadata,
+                            "question": q,
+                            "answer": ans,
+                            "template": template,
+                            "is_answer_good":is_good,
+                        }])
         q_ans_pairs = [
             f"#{i}:\n    question: {qa_dict['question']}\n    answer: {qa_dict['answer']}"
             for qa_dict in self.metadata
