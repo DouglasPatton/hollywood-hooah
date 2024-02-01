@@ -7,11 +7,11 @@ import { HttpClient } from '@angular/common/http';
   styleUrl: './app.component.sass'
 })
 export class AppComponent implements OnInit {
-  title = 'Rag Chatbot'
+  title = 'Rag Chatbot';
   query = "";
-  chat_response = ""
+  chat_response = ""; 
   backendHost = 'localhost';
-  backend_url = "/api";
+  backend_url = '/api';
 
   constructor(private http: HttpClient) {}
 
@@ -23,7 +23,7 @@ export class AppComponent implements OnInit {
 
   submit(){
     const predict_url = this.backendHost + this.backend_url + "/predict"
-    this.http.post(predict_url, this.query).subscribe(
+    this.http.post(predict_url, {'query' : this.query}).subscribe(
           (response: any) => {
             console.log(response);
             this.chat_response = response.chat_response;

@@ -3,7 +3,10 @@ from ragchat.configs import DEBUG, DB_NAME, COLLECTION_NAME, KEYS
 from random import seed,shuffle
 
 class DocStore:
-    def __init__(self,ip='localhost',port=27017, 
+    def __init__(self,
+                 # ip='localhost',
+                 ip='172.18.0.2',
+                 port=27017, 
                  db_name=DB_NAME, collection_name=COLLECTION_NAME,
                  keys=KEYS,
                  debug=DEBUG
