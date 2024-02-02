@@ -287,7 +287,7 @@ class RagChatbotMultiQA:
             ans = chain.invoke(query)
             is_good = is_answer_good(ans)
             meta_dict = {
-                "doc": d[0],
+                **d[0].metadata,
                 "similarity_score": d[1],
                 "answer": ans,
                 "is_good": is_good,
