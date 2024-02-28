@@ -22,7 +22,8 @@ This repo is at it's early stages, so check back soon for more.
  - model/notebooks/create_synthetic_questions.ipynb
  - run the chatbot
    - [from the command line](model/scripts/query_chatbotSyntheticQ.py)
-   - [from a notebook](model/notebooks/test_chatbot_syntheticq.ipynb) 
+   - [from a notebook](model/notebooks/test_chatbot_syntheticq.ipynb)
+   - stand up the micro-services application and use the angular page (instructions coming soon)
 
 
 ### Embedding & cleaning the docs
