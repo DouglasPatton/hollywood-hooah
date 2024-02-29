@@ -10,7 +10,7 @@ export class AppComponent implements OnInit {
   title = 'Rag Chatbot';
   query = "";
   chat_response = ""; 
-  backendHost = 'localhost';
+  backendHost = '10.0.0.128';
   backend_url = '/api';
 
   constructor(private http: HttpClient) {}

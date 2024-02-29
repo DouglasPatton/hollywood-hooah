@@ -4,8 +4,8 @@ from random import seed,shuffle
 
 class DocStore:
     def __init__(self,
-                 # ip='localhost',
-                 ip='172.18.0.2',
+                 ip='localhost',
+                 # ip='172.18.0.2',
                  port=27017, 
                  db_name=DB_NAME, collection_name=COLLECTION_NAME,
                  keys=KEYS,
