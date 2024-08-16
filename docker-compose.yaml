@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  
+  frontend:
+    image: dapatton/hollyhoo-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "4800:80"
+  
+  mongodb:
+    image: mongo
+    ports:
+      - '27017:27017'
+    volumes:
+      - /var/lib/mongodb:/data/db
+  
+  backend:
+    depends_on:
+      - mongodb
+    image: dapatton/hollyhoo-backend
+    build:
+      context: ./model
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      OPENAI_API_KEY_FILE: /run/secrets/open_ai_api_key
+    secrets:
+      - OPENAI_API_KEY
+secrets:
+  OPENAI_API_KEY:
+    file: /run/secrets/openai_api_key.txt
+      
